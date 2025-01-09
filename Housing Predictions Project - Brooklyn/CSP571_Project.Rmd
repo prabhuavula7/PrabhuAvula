@@ -1,0 +1,468 @@
+```{r}
+install.packages("dplyr")
+install.packages("corrplot")
+install.packages("plyr")
+install.packages("readr")
+install.packages("stringr")
+install.packages("ggplot2")
+install.packages("lubridate")
+```
+
+```{r}
+library(corrplot)
+library(plyr) # Always need to run plyr before dplyr  
+library(dplyr) 
+library(readr) 
+library(ggplot2)
+library(lubridate)
+```
+
+```{r}
+#Setting the working directory
+setwd("/Users/prabhuavula7/Desktop/Personal/APK/IIT-C/Sem 3/CSP 571/Project/Misc")
+
+getwd() #Confirm if the directory has changed
+```
+```{r}
+#Column relataed work
+read_return_df <- function(path) {
+    col_vector <- c('borough','neighborhood','bldclasscat','taxclasscurr','block',
+                'lot','easement','bldclasscurr','address','aptnum','zip','resunits',
+                'comunits','totunits','landsqft','grosssqft','yrbuilt','taxclasssale','bldclasssale','price','date');
+    df1= read.csv(path, stringsAsFactors = TRUE);
+    names(df1) = col_vector;
+    
+    return(df1)
+}
+df1= read_return_df("2016_brooklyn.csv")
+
+#Replace dashed values with 0 for all # of units and sale price
+df1$comunits <-gsub('-',0,df1$comunits, fixed=TRUE)
+df1$resunits <-gsub('-',0,df1$resunits, fixed = TRUE)
+df1$totunits <-gsub('-',0,df1$totunits, fixed = TRUE)
+df1$price <- gsub('-',NA,df1$price, fixed = TRUE)
+
+#remove all whitespace from bldclasscat
+df1$bldclasscat <- gsub(" ", "", df1$bldclasscat, fixed = TRUE)
+
+#Change year format to '16'
+df1$date <- as.Date(df1$date,'5/25/2016', format="%m/%d/%Y")
+df1$date <- as.Date(df1$date,'5/25/16', format="%m/%d/%y")
+```
+
+```{r}
+#df2
+df2= read_return_df("2017_brooklyn.csv")
+
+#change missing prices to NAs
+df2$price <- gsub('-',NA,df2$price, fixed = TRUE)
+
+#remove all whitespace from bldclasscat
+df2$bldclasscat <- gsub(" ", "", df2$bldclasscat, fixed = TRUE)
+
+#Change date format
+df2$date <- as.Date(df2$date,'5/25/16', format="%m/%d/%y")
+```
+
+```{r}
+#df3
+df3= read_return_df("2018_brooklyn.csv")
+
+#change missing prices to NAs
+df3$price <- gsub('-',NA,df3$price, fixed = TRUE)
+
+#Remove dollar signs from prices
+df3$price <- lapply(df3$price, gsub, pattern="$", fixed=TRUE, replacement="")
+
+#change missing prices to NAs
+df3$price <- gsub('-',NA,df3$price, fixed = TRUE)
+
+#remove all whitespace from bldclasscat
+df3$bldclasscat <- gsub(" ", "", df3$bldclasscat, fixed = TRUE)
+
+#Change date format
+df3$date <- as.Date(df3$date,'5/25/16', format="%m/%d/%y")
+```
+
+```{r}
+#df4
+df4= read_return_df("2019_brooklyn.csv")
+#change missing prices to NAs
+df4$price <- gsub('-',NA,df4$price, fixed = TRUE)
+
+#remove all whitespace from bldclasscat
+df4$bldclasscat <- gsub(" ", "", df4$bldclasscat, fixed = TRUE)
+
+#Change date format
+df4$date <- as.Date(df4$date,'5/25/16', format="%m/%d/%y")
+```
+
+```{r}
+#df5
+df5= read_return_df("2020_brooklyn.csv")
+
+#change missing prices to NAs
+df5$price <- gsub('-',NA,df5$price, fixed = TRUE)
+
+#remove all whitespace from bldclasscat
+df5$bldclasscat <- gsub(" ", "", df5$bldclasscat, fixed = TRUE)
+
+#Change date format
+df5$date <- as.Date(df5$date,'5/25/16', format="%m/%d/%y")
+```
+
+```{r}
+# Merge all the files. For the sake of this data, as we can see that all df1, df2, df3, df4, df5, initially after looking at df5 directly, we see that there are lot of white spaces, missing values and the data needs to have a through column to column treatment for which I shall bind the data first
+
+fullDf = rbind(df1, df2, df3, df4, df5) # Just general binding of all
+
+View(fullDf) # Here we can see that price is our dependant variable
+str(fullDf) # Here, you can see that a lot of variables should be turned into numeric and commas for prices must be dropped
+```
+```{r}
+#price
+fullDf$price <- as.numeric(gsub(",","",fullDf$price))
+
+#taxclasssale
+fullDf$taxclasssale <- as.numeric(fullDf$taxclasssale)
+
+#tax class current
+fullDf$taxclasscurr <- as.numeric(fullDf$taxclasscurr)
+
+#year built
+fullDf$yrbuilt <- as.numeric(fullDf$yrbuilt)
+
+#Gross square feet
+fullDf$grosssqft <- as.numeric(gsub(",","",fullDf$grosssqft))
+
+#Land Square feet
+fullDf$landsqft <- as.numeric(gsub(",","",fullDf$landsqft))
+
+#totunits
+fullDf$totunits <- as.numeric(fullDf$totunits)
+
+#comunits
+fullDf$comunits <- as.numeric(fullDf$comunits)
+
+#resunits
+fullDf$resunits <- as.numeric((fullDf$resunits))
+
+#remove white space from bldclasssale
+fullDf$bldclasssale <- gsub(" ", "", fullDf$bldclasssale, fixed = TRUE)
+unique(fullDf$bldclasssale)
+
+str(fullDf)
+```
+```{r}
+# In the data, we can drop easement as there are no columns in themeasement
+unique(fullDf$easement) #Here you can see that the column in not needed 
+fullDf = subset(fullDf, select = -easement)
+# Validate the deletion
+dim(fullDf)  
+colnames(fullDf) 
+colSums(is.na(fullDf)) #totunits (done), landsqft, grosssqft, yrbuilt and price
+
+#totunits
+fullDf <- fullDf[!is.na(fullDf$totunits),]
+fullDf2=fullDf
+dim(fullDf)
+
+a= fullDf[grepl("A", fullDf$bldclasssale),]
+b= fullDf[grepl("R", fullDf$bldclasssale),]
+
+fullDf= rbind(a,b)
+dim(fullDf2) - dim(fullDf) # the amount of rows dropped
+View(fullDf)
+
+# Restriction of data where 'totunits' = 1 or where 'resunits' == 1
+fullDf <- fullDf[fullDf$totunits == '1' | fullDf$resunits == '1', ]
+
+# Restriction of data where 'grosssqft' > 0 and where sale price is non-missing
+fullDf= subset(fullDf, fullDf$grosssqft > 0)
+fullDf= subset(fullDf, !is.na(fullDf$price)) #has come down to 19,700 rows
+
+dim(fullDf) #20,185
+
+colSums(is.na(fullDf)) #Now, all missing values are gone
+library(dplyr)
+tail(fullDf %>% count(yrbuilt)) # This shows that maximum units were built in 2016
+#Convert dates into quarters
+fullDf$quarter <- paste0(year(fullDf$date),
+                        "/0",
+                        quarter(fullDf$date))
+
+#Find average yrbuilt for each block
+fullDf["yrbuilt"][fullDf["yrbuilt"] == 0] <- NA
+blockyr<-aggregate(fullDf$yrbuilt, list(fullDf$block), FUN=mean)
+fullDf$yrbuilt <- with(fullDf, ave(yrbuilt, block, FUN = function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))))
+View(fullDf)
+```
+```{r}
+#Checking the distribution of price, landsqft, grosssqft
+ggplot(fullDf, aes(price))+
+  geom_histogram(bins = 50, alpha=0.7, color="white", fill= "black")+
+  labs(title = "Histogram of Price",
+       x = "Price in $",
+       y = "Frequency")
+ggplot(fullDf, aes(landsqft))+
+  geom_histogram(bins = 50, alpha=0.7, color="white", fill = "black")+
+  labs(title = "Histogram of Land Sqft",
+       x = "SQFT",
+       y = "Frequency")+
+  scale_x_continuous(limits = c(100,10000), breaks = seq(100,10000,1000))
+ggplot(fullDf, aes(grosssqft))+
+  geom_histogram(bins = 50, alpha=0.7, color="white", fill = "black")+
+  labs(title = "Histogram of Gross Sqft",
+       x = "SQFT",
+       y = "Frequency")+
+  scale_x_continuous(limits = c(100,6000), breaks = seq(100,6000,500))
+
+```
+```{r}
+#To better control the model degrees of freedom, zip can be bucketed further based on group median prices
+plot(fullDf$zip, fullDf$price)
+zip_means <- aggregate(fullDf$price, list(fullDf$zip), FUN=mean) #with mean
+colnames(zip_means) <- c("zip","mean_price")
+plot(zip_means$zip, (zip_means$mean_price), type = 'l') #with mean
+ggplot(zip_means, aes(x = zip, y = (zip_means$mean_price)))+
+  geom_point()
+
+zip_med <- aggregate(fullDf$price, list(fullDf$zip), FUN=median) #with median
+colnames(zip_med) <- c("zip","median_price")
+plot(zip_med$zip, (zip_med$median_price), type = 'l')+grid() #with median
+ggplot(zip_med, aes(x = zip, y = sort(zip_med$median_price)))+
+  geom_point()
+
+str(fullDf)
+
+corDf = cor(fullDf[,c('taxclasscurr','landsqft','price','resunits','totunits','yrbuilt','taxclasssale')])
+View(corDf)
+corrplot(corDf)
+```
+
+
+```{r}
+#change zip code with 0 based on address
+fullDf %>% count(zip)
+fullDf$zip[fullDf$zip==0]<-"11234"
+
+#find mean/median price of each zipcode
+u<-aggregate(fullDf$price, list(fullDf$zip), FUN=mean)
+v<-aggregate(fullDf$price, list(fullDf$zip), FUN=median)
+uv<- cbind(u,v)
+```
+```{r}
+#create ziprank column
+fullDf$zip_rk <- "zip_1"
+fullDf$zip_rk[fullDf$zip == c("11201", "11215","11217","11231","11238")] <- "zip_2"
+fullDf$zip_rk[fullDf$zip == "11211"] <- "zip_2"
+fullDf$zip_rk[fullDf$zip == "11209"] <- "zip_2"
+fullDf$zip_rk[fullDf$zip == "11218"] <- "zip_2"
+fullDf$zip_rk[fullDf$zip == "11222"] <- "zip_2"
+fullDf$zip_rk[fullDf$zip == "11225"] <- "zip_2"
+fullDf$zip_rk[fullDf$zip == "11205"] <- "zip_3"
+fullDf$zip_rk[fullDf$zip == "11232"] <- "zip_3"
+fullDf$zip_rk[fullDf$zip == "11249"] <- "zip_3"
+fullDf$zip_rk[fullDf$zip == "11228"] <- "zip_3"
+fullDf$zip_rk[fullDf$zip == "11216"] <- "zip_3"
+fullDf$zip_rk[fullDf$zip == "11230"] <- "zip_3"
+fullDf$zip_rk[fullDf$zip == "11221"] <- "zip_4"
+fullDf$zip_rk[fullDf$zip == "11210"] <- "zip_4"
+fullDf$zip_rk[fullDf$zip == "11220"] <- "zip_4"
+fullDf$zip_rk[fullDf$zip == "11204"] <- "zip_4"
+fullDf$zip_rk[fullDf$zip == "11223"] <- "zip_4"
+fullDf$zip_rk[fullDf$zip == "11213"] <- "zip_4"
+fullDf$zip_rk[fullDf$zip == "11219"] <- "zip_4"
+fullDf$zip_rk[fullDf$zip == "11235"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11233"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11214"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11229"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11226"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11237"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11206"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11234"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11224"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11203"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11236"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11208"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11207"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11239"] <- "zip_5"
+fullDf$zip_rk[fullDf$zip == "11212"] <- "zip_5"
+
+dim(fullDf)
+
+#test zip_rk columns
+summary(lm(price~zip_rk,data = fullDf))
+```
+```{r}
+#view counts to get a feel for variables, clean if necessary
+fullDf %>% count(bldclasscat)
+```
+```{r}
+#Price
+fullDf %>% count(price)
+#Eliminate all prices under $100000
+fullDf <- fullDf[fullDf$price > 99999,]
+head(fullDf %>% count(price), 20)
+fullDf %>% count(bldclasscat)
+
+#Eliminate prices above 7 millions dollars, not representative of typical homes
+fullDf <- fullDf[fullDf$price < 7000000,]
+
+#Find landsqft for each block
+
+u<-aggregate(fullDf$landsqft, list(fullDf$block), FUN=mean)
+
+#replace landsqft of na with avg landsqft for that block
+fullDf["landsqft"][fullDf["landsqft"] == 0] <- NA
+
+fullDf$landsqft <- with(fullDf, ave(landsqft, block, FUN = function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))))
+
+#replace NaNs with mean for column
+fullDf$landsqft[is.na(fullDf$landsqft)]<- mean(fullDf$landsqft, na.rm = TRUE)
+
+#remove landsqft that is 1 or less
+fullDf<-fullDf[fullDf$landsqft > 1,]
+
+#replace yrbuilt of Nan with mean yr built
+fullDf$yrbuilt[is.na(fullDf$yrbuilt)]<- mean(fullDf$yrbuilt, na.rm = TRUE)
+
+#replace NaNs with mean for column
+fullDf$yrbuilt[is.na(fullDf$yrbuilt)]<- mean(fullDf$yrbuilt, na.rm = TRUE)
+fullDf$landsqft[is.na(fullDf$landsqft)]<- mean(fullDf$landsqft, na.rm = TRUE)
+
+dim(fullDf)
+str(fullDf)
+```
+```{r}
+summary(fullDf2)
+```
+
+
+```{r}
+#Starting the models
+model1 <- lm(price ~ bldclasscat + bldclasssale + grosssqft + yrbuilt + quarter + zip_rk, data = fullDf)
+summary(model1)   
+
+#RMSE
+sqrt(mean(model1$residuals^2))  
+
+#model2
+model2 <- lm(price ~ bldclasscat + log(landsqft) + sqrt(grosssqft )*zip_rk + yrbuilt + quarter , data = fullDf)
+summary(model2) 
+
+#RMSE model2
+sqrt(mean(model2$residuals^2)) 
+
+#model3 square root of price
+model3 <- lm(sqrt(price) ~ bldclasscat + yrbuilt + landsqft + grosssqft + quarter + zip_rk, data = fullDf)
+summary(model3) 
+
+#RMSE model 3
+sqrt(mean((fullDf$price - model3$fitted.values^2)^2)) 
+
+#final model, add interaction between zip_rk and grosssqft
+final_model <- lm(sqrt(price) ~ bldclasscat + yrbuilt + quarter + sqrt(grosssqft)*(zip_rk) +log(landsqft), data = fullDf)
+summary(final_model)  
+
+#RMSE final model
+sqrt(mean((fullDf$price - final_model$fitted.values^2)^2)) 
+
+```
+```{r}
+install.packages("lmtest")
+library(lmtest)
+require(lmtest)
+
+hist(final_model$residuals, breaks = 100)
+ks.test(final_model$residuals/summary(final_model)$sigma, pnorm)
+bptest(final_model)
+dwtest(final_model)
+plot(final_model$fitted.values, final_model$residuals)
+```
+```{r}
+Q3= fullDf[fullDf$quarter== "2020/03", ]
+Q4= fullDf[fullDf$quarter== "2020/04", ]
+Q1=fullDf[fullDf$quarter== "2020/01", ]
+Q2=fullDf[fullDf$quarter== "2020/02", ]
+
+q=Q3
+r=Q4
+s=Q1
+t=Q2
+
+outliers_4= boxplot(Q4$price, plot=FALSE)$out
+x<-Q4 
+x<- x[-which(x$price %in% outliers_4),]
+dim(x)
+
+outliers_3= boxplot(Q3$price, plot=FALSE)$out
+y<-Q3 
+y<- y[-which(y$price %in% outliers_3),]
+dim
+
+sample= sample_n(x, 286)
+
+dim(q)
+```
+```{r}
+quartiles <- quantile(q$price, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(q$price)
+
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+
+data_no_outlier <- subset(q, q$price > Lower & q$price < Upper)
+
+dim(data_no_outlier)
+
+quartiles <- quantile(r$price, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(r$price)
+
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+
+data_no_outlier1 <- subset(r, r$price > Lower & q$price < Upper)
+
+dim(data_no_outlier1)
+
+w= rbind(x,y)
+
+q=rbind(sample,y)
+
+library(ggplot2) # Load ggplot2
+
+ggplot(data = q, aes(x=as.character(quarter), y=price)) + 
+  geom_boxplot() +
+  labs( x="Quarters", y="Price")
+
+library(ggplot2) # Load ggplot2
+ggplot(data = w, aes(x=as.character(quarter), y=price)) + 
+  geom_boxplot() +
+  labs( x="Quarters", y="Price")
+
+max(x$price)
+max(y$price)
+
+hist(x$price, breaks=10)
+ggplot(w, aes(length, fill = veg)) + geom_density(alpha = 0.2)
+```
+```{r}
+library(MASS)
+ggplot(w, aes(x = price)) +
+  geom_histogram(fill = "white", colour = "black") +
+  facet_grid(quarter ~ .)
+
+mean((fullDf$price[fullDf$quarter == '2016/03']))-mean((fullDf$price[fullDf$quarter == '2016/04']))
+mean((fullDf$price[fullDf$quarter == '2017/03']))-mean((fullDf$price[fullDf$quarter == '2017/04']))
+mean((fullDf$price[fullDf$quarter == '2018/03']))-mean((fullDf$price[fullDf$quarter == '2018/04']))
+mean((fullDf$price[fullDf$quarter == '2019/03']))-mean((fullDf$price[fullDf$quarter == '2019/04']))
+mean((fullDf$price[fullDf$quarter == '2020/03']))-mean((fullDf$price[fullDf$quarter == '2020/04']))
+
+median((fullDf$price[fullDf$quarter == '2016/03']))-median((fullDf$price[fullDf$quarter == '2016/04']))
+median((fullDf$price[fullDf$quarter == '2017/03']))-median((fullDf$price[fullDf$quarter == '2017/04']))
+median((fullDf$price[fullDf$quarter == '2018/03']))-median((fullDf$price[fullDf$quarter == '2018/04']))
+median((fullDf$price[fullDf$quarter == '2019/03']))-median((fullDf$price[fullDf$quarter == '2019/04']))
+median((fullDf$price[fullDf$quarter == '2020/03']))-median((fullDf$price[fullDf$quarter == '2020/04']))
+```
+
