@@ -1,0 +1,56 @@
+```{r}
+#Loading required libraries
+library(tm)
+library(e1071)
+
+#Loading the dataset
+data_dir <- "/Users/prabhuavula7/Desktop/sms+spam+collection/"
+sms_data <- read.table(file.path(data_dir, "SMSSpamCollection"), sep = "\t", header = FALSE)
+colnames(sms_data) <- c("class", "text")
+
+#Preprocessing the text data
+corpus <- Corpus(VectorSource(sms_data$text))
+corpus <- tm_map(corpus, content_transformer(tolower))   
+corpus <- tm_map(corpus, removePunctuation)               
+corpus <- tm_map(corpus, removeNumbers)                   
+corpus <- tm_map(corpus, removeWords, stopwords("en"))    
+corpus <- tm_map(corpus, stripWhitespace)                 
+
+#Creating a Document Term Matrix
+dtm <- DocumentTermMatrix(corpus)
+
+#Finding features from words occurring more than 10 times
+freq_words <- findFreqTerms(dtm, 10)
+
+#Splitting the data 
+set.seed(123)
+train_indices <- sample(1:nrow(sms_data), 0.7 * nrow(sms_data))  
+train_data <- sms_data[train_indices, ]
+test_data <- sms_data[-train_indices, ]
+```
+
+
+```{r}
+#Creating Document Term Matrices for training and test data
+train_dtm <- DocumentTermMatrix(Corpus(VectorSource(train_data$text)), control = list(dictionary = freq_words))
+test_dtm <- DocumentTermMatrix(Corpus(VectorSource(test_data$text)), control = list(dictionary = freq_words))
+
+#Converting the Document Term Matrix to a Boolean representation
+train_matrix <- ifelse(as.matrix(train_dtm) > 0, 1, 0)
+test_matrix <- ifelse(as.matrix(test_dtm) > 0, 1, 0)
+
+#Fitting an SVM 
+svm_model <- svm(as.factor(train_data$class) ~ ., data = as.data.frame(train_matrix), kernel = "linear")
+
+#Reporting the training and test set accuracy
+train_preds <- predict(svm_model, newdata = as.data.frame(train_matrix))
+test_preds <- predict(svm_model, newdata = as.data.frame(test_matrix))
+
+train_accuracy <- sum(train_preds == train_data$class) / length(train_data$class)
+test_accuracy <- sum(test_preds == test_data$class) / length(test_data$class)
+
+cat("Training Set Accuracy:", train_accuracy, "\n")
+cat("Test Set Accuracy:", test_accuracy, "\n")
+
+```
+

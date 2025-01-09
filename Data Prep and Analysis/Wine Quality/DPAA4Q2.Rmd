@@ -1,0 +1,73 @@
+```{r}
+#Practicum Problem 2
+library(caret)
+library(randomForest)
+library(rpart)
+library(rpart.plot)
+
+redwine = read.csv("/Users/prabhuavula7/Desktop/wine+quality/winequality-red.csv", header = T, sep = ';')
+whitewine = read.csv("/Users/prabhuavula7/Desktop/wine+quality/winequality-white.csv", header = T, sep = ';')
+str(whitewine)
+str(redwine)
+```
+```{r}
+#Handling the ‘quality’ output variable
+whitewine$quality = as.factor(whitewine$quality)
+redwine$quality = as.factor(redwine$quality)
+str(whitewine)
+str(redwine)
+```
+```{r}
+#Using the caret package to perform a 80/20 split 
+datapartred = createDataPartition(y=redwine$quality,p=0.8,list=FALSE)
+traindatared = redwine[datapartred,]
+testdatared = redwine[-datapartred,]
+```
+
+```{r}
+#Using the caret package to perform a 80/20 split
+datapartwhite = createDataPartition(y=whitewine$quality,p=0.8,list=FALSE)
+traindatawhite = whitewine[datapartwhite,]
+testdatawhite = whitewine[-datapartwhite,]
+#inducing a decision tree for red wine targeting the quality output variable
+dtred = rpart(quality~., data=traindatared)
+#plotting
+rpart.plot(dtred)
+```
+```{r}
+#inducing a decision tree for white wine
+dtwhite = rpart(quality~., data=traindatawhite)
+#plotting
+rpart.plot(dtwhite)
+```
+```{r}
+#Confusion Matrix for red wine 
+redpred = predict(dtred, testdatared, type = 'class')
+confusionMatrix(redpred, testdatared$quality)
+```
+
+```{r}
+#Confusion Matrix for white wine 
+whitepred = predict(dtwhite, testdatawhite, type = 'class')
+confusionMatrix(whitepred, testdatawhite$quality)
+```
+```{r}
+#Via randomForest package to repeat the fit for red wine
+rfred = train(quality~., data=traindatared, method='rf', preProcess=c('center', 'scale'))
+
+#Via randomForest package to repeat the fit for white wine
+rfwhite = train(quality~., data=traindatawhite, method='rf', preProcess=c('center', 'scale'))
+```
+
+```{r}
+#Confusion Matrix of random forest model on test data of red wine
+rfredpred = predict(rfred, testdatared)
+confusionMatrix(rfredpred, testdatared$quality)
+```
+
+```{r}
+#Confusion Matrix of random forest model on test data of white wine
+rfwhitepred = predict(rfwhite, testdatawhite)
+confusionMatrix(rfwhitepred, testdatawhite$quality)
+```
+

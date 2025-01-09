@@ -1,0 +1,509 @@
+2.1 Problem 1
+
+Load the iris sample dataset into R using a dataframe (it is a built-in dataset).
+```{r}
+#Loading the dataset into a data frame
+data(iris)
+iris_df <- as.data.frame(iris)
+```
+
+```{r}
+#In order to view the data before operating with it. Not part of the problem.
+head(iris)
+```
+
+Create a boxplot of each of the 4 features, and highlight the feature with the largest empirical IQR.
+```{r}
+#to find the largest empirical IQR
+empirical_iqr <- sapply(iris_df[, 1:4], IQR)
+largest_iqr_feature <- names(empirical_iqr[which.max(empirical_iqr)])
+```
+Calculate the parametric standard deviation for each feature - do your results agree with the empirical values?
+```{r}
+#To find the standard deviation
+parametric_sd <- sapply(iris_df[, 1:4], sd)
+```
+
+```{r}
+#To present both values
+cat("Empirical IQR:", empirical_iqr, "\n")
+cat("Parametric SD:", parametric_sd, "\n")
+```
+No, the standard deviation and the empirical IQR are quite different from each other for petal length and width.
+
+Use the ggplot2 library from CRAN to create a colored boxplot for each feature, with a box-whisker per flower species.
+```{r}
+#Creating a colored boxplot for Sepal Length
+library(ggplot2)
+ggplot(iris_df, aes(x = Species, y = Sepal.Length, fill = Species)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Sepal Length by Species") +
+  theme_minimal()
+#Creating a colored boxplot for Sepal Width
+ggplot(iris_df, aes(x = Species, y = Sepal.Width, fill = Species)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Sepal Width by Species") +
+  theme_minimal()
+#Creating a colored boxplot for Petal Length
+ggplot(iris_df, aes(x = Species, y = Petal.Length, fill = Species)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Petal Length by Species") +
+  theme_minimal()
+#Creating a colored boxplot for Petal Width
+ggplot(iris_df, aes(x = Species, y = Petal.Width, fill = Species)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Petal Width by Species") +
+  theme_minimal()
+```
+
+Which flower type exhibits a significantly different Petal Length/Width once it is separated from the other classes?
+```{r}
+#To perform t-tests for Petal Length and Width
+t_test_length <- t.test(setosa_data$Petal.Length, other_species_data$Petal.Length)
+t_test_width <- t.test(setosa_data$Petal.Width, other_species_data$Petal.Width)
+
+#To extract the p-values from the t-test results
+p_value_length <- t_test_length$p.value
+p_value_width <- t_test_width$p.value
+
+#To print the p-values
+cat("T-test for Petal Length - p-value:", p_value_length, "\n")
+cat("T-test for Petal Width - p-value:", p_value_width, "\n")
+```
+Virginica exhibits a different petal length/width once separated.
+
+2.2 Problem 2
+
+Load the trees sample dataset into R using a dataframe (it is a built-in dataset), and produce a 5-number summary of each feature.
+```{r}
+#Load the dataset into a frame
+data(trees)
+trees_df <- as.data.frame(trees)
+```
+
+```{r}
+#For my observation only
+head(trees)
+```
+
+Produce a 5-number summary of each feature
+```{r}
+#Simple line to get the summary.
+summary(trees_df)
+```
+Create a histogram of each variable - which variables appear to be normally distributed based on visual inspection? 
+```{r}
+#to get the histograms for girth, volume and height
+hist(trees_df$Girth, main="Histogram of Girth", xlab="Girth")
+hist(trees_df$Height, main="Histogram of Height", xlab="Height")
+hist(trees_df$Volume, main="Histogram of Volume", xlab="Volume")
+```
+Looking at the histograms, all of them are skewed. 
+
+Do any variables exhibit positive or negative skewness? Install the moments library from CRAN use the skewness function to calculate the skewness of each variable. Do the values agree with the visual inspection?
+```{r}
+#get the necessary packages
+install.packages("moments")
+library(moments)
+```
+
+```{r}
+#Calculate the skewness for each
+skewnessgirth <- skewness(trees_df$Girth)
+skewnessheight <- skewness(trees_df$Height)
+skewnessvolume <- skewness(trees_df$Volume)
+```
+
+```{r}
+#present the skewness for each
+cat("Skewness of Girth:", skewnessgirth, "\n")
+cat("Skewness of Height:", skewnessheight, "\n")
+cat("Skewness of Volume:", skewnessvolume, "\n")
+```
+Based on the calculations as well as the histograms from the previous cells, height has a slight negative skew whereas girth has a slightly positive skew and volume has a positive skew. Hence, the values match the visual inspection. 
+
+2.3 Problem 3
+
+Load the auto-mpg sample dataset from the UCI Machine Learning Reposi- tory (auto-mpg.data) into R using a dataframe (Hint: You will need to use read.csv with url, and set the appropriate values for header,as.is, and sep). 
+
+```{r}
+#Loading the dataset from the repo
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/auto-mpg/auto-mpg.data"
+
+#Reading the dataset. Did not need to specify a separator
+auto_mpg <- read.table(url, header = FALSE, sep = "", na.strings = "?")
+
+#Defining column names
+col_names <- c("mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model_year", "origin", "car_name")
+
+#Setting the column names
+colnames(auto_mpg) <- col_names
+```
+
+```{r}
+#Just to view the table before operating on it.
+head(auto_mpg)
+```
+
+The horsepower feature has a few missing values with a ? - and will be treated as a string. Use the as.numeric casting function to obtain the column as a nu- meric vector, and replace all NA values with the median.
+```{r}
+#Converting the hp column to numeric
+auto_mpg$horsepower <- as.numeric(auto_mpg$horsepower)
+#Precautionary check to make sure its numeric
+is.numeric(auto_mpg$horsepower)
+#to check the median
+medianhp<-median(auto_mpg$horsepower,na.rm =TRUE)
+medianhp
+#To check the mean
+meanhp<-mean(auto_mpg$horsepower,na.rm =TRUE)
+meanhp
+#To check null rows
+nullrows<-sum(is.na(auto_mpg$horsepower))
+nullrows
+```
+
+```{r}
+#Calculating the mean of the hp column before and after replacing missing values
+original_mean <- mean(auto_mpg$horsepower, na.rm = TRUE)
+#to replace any nulls with median
+auto_mpg$horsepower[is.na(auto_mpg$horsepower)] <- median.default(auto_mpg$horsepower, na.rm = TRUE)
+```
+
+How does this affect the value obtained for the mean vs the original mean when the records were ignored?
+```{r}
+# Print the original and updated means
+cat("Original Mean:", original_mean, "\n")
+cat("Updated Mean:", mean(auto_mpg$horsepower), "\n")
+```
+Since replacing null rows with the median and calculating the mean again, we see a slight decrease from the original mean. This makes sense as the median is 93.5, well below the original mean. Hence, the overall updated mean decreased.
+
+2.4 Problem 4
+
+Load the Boston sample dataset into R using a dataframe (it is part of the MASS package). Use lm to fit a regression between medv and lstat - plot the resulting fit and show a plot of fitted values vs. residuals. Is there a possible non-linear relationship between the predictor and response? Use the predict function to calculate values response values for lstat of 5, 10, and 15 - obtain confidence intervals as well as prediction intervals for the results - are they the same? Why or why not? Modify the regression to include lstat2 (as well lstat itself) and compare the R2 between the linear and non-linear fit - use ggplot2 and stat smooth to plot the relationship.
+```{r}
+#Loading the MASS package and the Boston dataset
+library(MASS)
+data(Boston)
+
+#Fitting a linear regression model
+model <- lm(medv ~ lstat, data = Boston)
+
+#Plotting the regression fit
+plot(Boston$lstat, Boston$medv, main = "Linear Regression Fit", xlab = "lstat", ylab = "medv")
+abline(model, col = "blue")
+
+#Plotting fitted values vs. residuals
+residuals <- residuals(model)
+fitted_values <- fitted(model)
+plot(fitted_values, residuals, main = "Fitted Values vs. Residuals", xlab = "Fitted Values", ylab = "Residuals")
+
+#Checking for non-linearity by adding a smoother
+lines(lowess(fitted_values, residuals), col = "red")
+
+#Calculating predictions for lstat of 5, 10, and 15
+new_data <- data.frame(lstat = c(5, 10, 15))
+predictions <- predict(model, newdata = new_data, interval = "prediction", level = 0.95)
+print(predictions)
+
+#Fitting a non-linear regression model including lstat^2
+model_nonlinear <- lm(medv ~ lstat + I(lstat^2), data = Boston)
+
+#Calculating R-squared values for both linear and non-linear models
+r_squared_linear <- summary(model)$r.squared
+r_squared_nonlinear <- summary(model_nonlinear)$r.squared
+
+#Comparing R-squared values
+cat("R-squared (Linear):", r_squared_linear, "\n")
+cat("R-squared (Non-linear):", r_squared_nonlinear, "\n")
+
+#Plotting the non-linear fit using ggplot2
+library(ggplot2)
+ggplot(Boston, aes(x = lstat, y = medv)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x + I(x^2), se = FALSE, color = "blue") +
+  labs(title = "Non-Linear Regression Fit", x = "lstat", y = "medv")
+
+```
+As per the graphs, there is an indication of non-linearity in the relationship between lstat and medv. Furthermore, the confidence interval and prediction interval differ in their interpretation of response values. A wider prediction interval indicates greater uncertainty around a specific value, while a narrower confidence interval reflects uncertainty around the estimated mean.
+
+```{r}
+#Defining the range of n
+n_values <- 1:100
+
+#Defining the observation number (j)
+j <- 10
+
+#Calculating the probability that the jth observation is in the bootstrap sample
+bootstrap_probabilities <- 1 - (1 - (1/n_values))^n_values
+
+#Creating the plot
+plot(n_values, bootstrap_probabilities, type = "l",
+     xlab = "Number of Observations (n)", ylab = "Probability",
+     main = paste("Probability of jth Observation in Bootstrap Sample (j =", j, ")"))
+
+```
+```{r}
+data <- rep (NA, 10000)
+for(i in 1:10000)
+  {
+    data[i] <- sum (sample(1:100, rep=TRUE)==4)>0} 
+mean(data)
+
+```
+
+```{r}
+# Load necessary libraries
+library(caret)
+
+# Load the Abalone dataset from UCI Machine Learning Repository
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data"
+abalone <- read.csv(url, header = FALSE)
+colnames(abalone) <- c("Sex", "Length", "Diameter", "Height", "WholeWeight", "ShuckedWeight", "VisceraWeight", "ShellWeight", "Rings")
+
+# Remove observations in the "Infant" category
+abalone <- abalone[abalone$Sex %in% c("M", "F"), ]
+
+# Convert "Sex" into a binary variable (0 for Female, 1 for Male)
+abalone$Sex <- ifelse(abalone$Sex == "F", 0, 1)
+
+# Perform an 80/20 test-train split
+set.seed(123)
+trainIndex <- createDataPartition(abalone$Sex, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+trainData <- abalone[ trainIndex,]
+testData  <- abalone[-trainIndex,]
+
+# Fit a logistic regression using all feature variables
+logistic_model <- glm(Sex ~ ., data = trainData, family = binomial)
+
+# View model summary to observe relevant predictors
+summary(logistic_model)
+```
+
+```{r}
+# Load necessary libraries
+library(caret)
+
+# Load the Abalone dataset from UCI Machine Learning Repository
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data"
+abalone <- read.csv(url, header = FALSE)
+colnames(abalone) <- c("Sex", "Length", "Diameter", "Height", "WholeWeight", "ShuckedWeight", "VisceraWeight", "ShellWeight", "Rings")
+
+# Remove observations in the "Infant" category
+abalone <- abalone[abalone$Sex %in% c("M", "F"), ]
+
+# Convert "Sex" into a binary variable (0 for Female, 1 for Male)
+abalone$Sex <- ifelse(abalone$Sex == "F", 0, 1)
+
+# Perform an 80/20 test-train split
+set.seed(123)
+trainIndex <- createDataPartition(abalone$Sex, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+trainData <- abalone[ trainIndex,]
+testData  <- abalone[-trainIndex,]
+
+# Fit a logistic regression using all feature variables
+logistic_model <- glm(Sex ~ ., data = trainData, family = binomial)
+
+# View model summary to observe relevant predictors
+summary(logistic_model)
+
+# Check if confidence intervals for predictors contain 0
+conf_int <- confint(logistic_model)
+conf_int
+
+# Obtain testing results
+predicted_classes <- predict(logistic_model, newdata = testData, type = "response")
+predicted_classes <- ifelse(predicted_classes > 0.5, 1, 0)
+
+# Confusion Matrix
+confusionMatrix(as.factor(predicted_classes), as.factor(testData$Sex))
+
+# Plot correlations between the predictors
+correlation_matrix <- cor(abalone[2:8])
+corrplot(correlation_matrix, method="circle")
+
+
+```
+```{r}
+# Load necessary libraries
+library(e1071)
+
+# Load the Mushroom dataset from UCI Machine Learning Repository
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.data"
+mushrooms <- read.csv(url, header = FALSE)
+
+# Add column names
+colnames(mushrooms) <- c("class", "cap_shape", "cap_surface", "cap_color", "bruises", 
+                         "odor", "gill_attachment", "gill_spacing", "gill_size", 
+                         "gill_color", "stalk_shape", "stalk_root", "stalk_surface_above_ring", 
+                         "stalk_surface_below_ring", "stalk_color_above_ring", 
+                         "stalk_color_below_ring", "veil_type", "veil_color", "ring_number", 
+                         "ring_type", "spore_print_color", "population", "habitat")
+
+# Handling missing values
+mushrooms[mushrooms == "?"] <- NA
+mushrooms <- na.omit(mushrooms)
+
+# Create a Naive Bayes classifier
+nb_classifier <- naiveBayes(class ~ ., data = mushrooms)
+
+# Split data into 80% for training and 20% for testing
+set.seed(123)
+trainIndex <- sample(1:nrow(mushrooms), 0.8*nrow(mushrooms))
+trainData <- mushrooms[trainIndex,]
+testData <- mushrooms[-trainIndex,]
+
+# Predict class labels
+train_pred <- predict(nb_classifier, trainData, type = "class")
+test_pred <- predict(nb_classifier, testData, type = "class")
+
+# Calculate accuracy
+train_accuracy <- sum(train_pred == trainData$class) / nrow(trainData)
+test_accuracy <- sum(test_pred == testData$class) / nrow(testData)
+
+# Print accuracies
+cat("Training Accuracy:", train_accuracy, "\n")
+cat("Testing Accuracy:", test_accuracy, "\n")
+
+# Create a confusion matrix
+conf_matrix <- table(predicted = test_pred, actual = testData$class)
+
+# Print confusion matrix
+conf_matrix
+
+# Calculate false positives
+false_positives <- conf_matrix[2, 1]
+cat("False Positives:", false_positives, "\n")
+```
+```{r}
+# Load necessary libraries
+library(caret)
+
+# Load the Yacht Hydrodynamics dataset from UCI Machine Learning Repository
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00243/yacht_hydrodynamics.data"
+yacht_data <- read.table(url, header = FALSE, col.names = c("Longitudinal_Position", "Prismatic_Coefficient", "Length_Displacement_Ratio", "Beam_Draught_Ratio", "Length_Beam_Ratio", "Froude_Number", "Residuary_Resistance"))
+
+# Perform an 80/20 test-train split
+set.seed(123)
+trainIndex <- createDataPartition(yacht_data$Residuary_Resistance, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+trainData <- yacht_data[trainIndex,]
+testData  <- yacht_data[-trainIndex,]
+
+# Fit a linear model using all available features with Residuary Resistance as the target
+linear_model <- lm(Residuary_Resistance ~ ., data = trainData)
+
+# Calculate training MSE, RMSE, and R-squared
+train_predictions <- predict(linear_model, trainData)
+train_mse <- mean((trainData$Residuary_Resistance - train_predictions)^2)
+train_rmse <- sqrt(train_mse)
+train_r_squared <- summary(linear_model)$r.squared
+
+# Print results
+cat("Training MSE:", train_mse, "\n")
+cat("Training RMSE:", train_rmse, "\n")
+cat("Training R-squared:", train_r_squared, "\n")
+
+# Bootstrap with N=1000 samples
+boot_control <- trainControl(method = "boot", number = 1000)
+boot_results <- train(Residuary_Resistance ~ ., data = trainData, method = "lm", trControl = boot_control)
+
+# Extract bootstrap results
+boot_rmse <- boot_results$results$RMSE
+boot_r_squared <- boot_results$results$Rsquared
+
+# Plot histogram of RMSE values
+hist(boot_rmse, main = "Bootstrap RMSE", xlab = "RMSE")
+
+# Calculate mean RMSE and R-squared for bootstrap model
+mean_rmse <- mean(boot_rmse, na.rm = TRUE)
+mean_r_squared <- mean(boot_r_squared, na.rm = TRUE)
+
+# Print results
+cat("Mean Bootstrap RMSE:", mean_rmse, "\n")
+cat("Mean Bootstrap R-squared:", mean_r_squared, "\n")
+
+# Evaluate performance on test set
+test_predictions <- predict(linear_model, testData)
+test_mse <- mean((testData$Residuary_Resistance - test_predictions)^2)
+test_rmse <- sqrt(test_mse)
+test_r_squared <- 1 - (sum((testData$Residuary_Resistance - test_predictions)^2) / sum((testData$Residuary_Resistance - mean(testData$Residuary_Resistance))^2))
+
+# Print results
+cat("Test MSE:", test_mse, "\n")
+cat("Test RMSE:", test_rmse, "\n")
+cat("Test R-squared:", test_r_squared, "\n")
+
+```
+```{r}
+# Load necessary libraries
+library(caret)
+
+# Load the German Credit Data dataset from UCI Machine Learning Repository
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data-numeric"
+german_data <- read.table(url, header = FALSE, sep = '')
+
+# Assuming the target column is the last one (change the index if needed)
+colnames(german_data)[ncol(german_data)] <- "Class"
+
+# Perform an 80/20 test-train split
+set.seed(123)
+trainIndex <- createDataPartition(german_data$Class, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+trainData <- german_data[trainIndex,]
+testData <- german_data[-trainIndex,]
+
+# Fit a logistic model using all predictors
+logistic_model <- glm(Class ~ ., data = trainData, family = binomial)
+
+# Predict class labels
+train_pred <- ifelse(predict(logistic_model, trainData, type = "response") > 0.5, 2, 1)
+test_pred <- ifelse(predict(logistic_model, testData, type = "response") > 0.5, 2, 1)
+
+# Calculate training Precision/Recall and F1
+train_conf_matrix <- confusionMatrix(train_pred, trainData$Class)
+train_precision <- train_conf_matrix$byClass["Pos Pred Value"]
+train_recall <- train_conf_matrix$byClass["Sensitivity"]
+train_f1 <- 2 * (train_precision * train_recall) / (train_precision + train_recall)
+
+# Print training results
+cat("Training Precision:", train_precision, "\n")
+cat("Training Recall:", train_recall, "\n")
+cat("Training F1 Score:", train_f1, "\n")
+
+# Perform k=10 fold cross-validation
+cv_control <- trainControl(method = "cv", number = 10)
+cv_model <- train(Class ~ ., data = trainData, method = "glm", family = binomial, trControl = cv_control)
+
+# Calculate cross-validated training Precision/Recall and F1
+cv_precision <- cv_model$results$Pos_Pred_Value[1] # Assumes positive class is "2"
+cv_recall <- cv_model$results$Sensitivity[1] # Assumes positive class is "2"
+cv_f1 <- 2 * (cv_precision * cv_recall) / (cv_precision + cv_recall)
+
+# Print cross-validated results
+cat("Cross-Validated Precision:", cv_precision, "\n")
+cat("Cross-Validated Recall:", cv_recall, "\n")
+cat("Cross-Validated F1 Score:", cv_f1, "\n")
+
+# Evaluate performance on test set
+test_precision <- train_conf_matrix$byClass["Pos Pred Value"]
+test_recall <- train_conf_matrix$byClass["Sensitivity"]
+test_f1 <- 2 * (test_precision * test_recall) / (test_precision + test_recall)
+
+# Print test set results
+cat("Test Precision:", test_precision, "\n")
+cat("Test Recall:", test_recall, "\n")
+cat("Test F1 Score:", test_f1, "\n")
+```
+
+```{r}
+install.packages("readr")
+``
+
+```
+

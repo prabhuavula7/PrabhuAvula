@@ -1,0 +1,150 @@
+```{r}
+#Loading the dataset
+data(mtcars)
+
+#Performing an 80/20 split
+set.seed(42)
+sample_indices <- sample(1:nrow(mtcars), 0.8*nrow(mtcars))
+train_data <- mtcars[sample_indices, ]
+test_data <- mtcars[-sample_indices, ]
+
+#Fitting a linear model
+lmmodel <- lm(mpg ~ . - am, data = train_data)
+
+summary(lmmodel)
+```
+```{r}
+#Performing ridge regression
+library(glmnet)
+
+#Creating a matrix and converting the outcome to matrix
+X <- model.matrix(mpg ~ . - am, data = train_data)
+y <- train_data$mpg
+
+#Fitting the ridge regression model using cross-validation to find optimal lambda
+ridge_model <- cv.glmnet(X, y, alpha = 0)
+
+#Plotting the training MSE as a function of lambda
+plot(ridge_model)
+```
+```{r}
+#Finding minimum lambda
+min_lambda <- ridge_model$lambda.min
+cat("Optimal lambda:", min_lambda, "\n")
+
+#Fitting the ridge regression with optimal lambda
+final_ridge_model <- glmnet(X, y, alpha = 0, lambda = min_lambda)
+
+#Obtaining the coefficients for relevant features
+coef(final_ridge_model)
+
+```
+
+```{r}
+#Predicting on the test set
+X_test <- model.matrix(mpg ~ . - am, data = test_data)
+y_test <- test_data$mpg
+y_pred_ridge <- predict(final_ridge_model, s = min_lambda, newx = X_test)
+
+#Calculating the MSE for ridge regression
+mse_ridge <- mean((y_test - y_pred_ridge)^2)
+cat("Test Set MSE for Ridge Regression:", mse_ridge, "\n")
+
+#Comparing with linear model
+y_pred_lm <- predict(lm_model, newdata = test_data)
+mse_lm <- mean((y_test - y_pred_lm)^2)
+cat("Test Set MSE for Linear Model:", mse_lm, "\n")
+```
+
+```{r}
+#Loadint the swiss dataset
+data(swiss)
+
+#Performing a 80/20 split
+set.seed(42)
+sample_indices <- sample(1:nrow(swiss), 0.8*nrow(swiss))
+train_data <- swiss[sample_indices, ]
+test_data <- swiss[-sample_indices, ]
+
+#Fitting a linear model
+lm_model <- lm(Fertility ~ . - Catholic, data = train_data)  #Removing catholic because it is not numeric
+summary(lm_model)
+```
+
+```{r}
+#Performing a lasso regression
+library(glmnet)
+#Creating a matrix and converting the outcome to a matrix
+X <- model.matrix(Fertility ~ . - Catholic, data = train_data)
+y <- train_data$Fertility
+#Fitting the lasso regression model using cross-validation to find optimal lambda
+lasso_model <- cv.glmnet(X, y, alpha = 1, nfolds = 10, parallel = TRUE)
+#Plotting the training MSE as a function of lambda
+plot(lasso_model)
+```
+```{r}
+#Finding the minimum lambda
+min_lambda <- lasso_model$lambda.min
+cat("Optimal lambda:", min_lambda, "\n")
+
+#Fitting the lasso regression with optimal lambda
+final_lasso_model <- glmnet(X, y, alpha = 1, lambda = min_lambda)
+
+#Obtaining coefficients for relevant features
+coef(final_lasso_model)
+```
+
+```{r}
+#Predicting on test set
+X_test <- model.matrix(Fertility ~ . - Catholic, data = test_data)
+y_test <- test_data$Fertility
+y_pred_lasso <- predict(final_lasso_model, s = min_lambda, newx = X_test)
+
+#Calculating the MSE for lasso regression
+mse_lasso <- mean((y_test - y_pred_lasso)^2)
+cat("Test Set MSE for Lasso Regression:", mse_lasso, "\n")
+
+#Comparing with the linear model
+y_pred_lm <- predict(lm_model, newdata = test_data)
+mse_lm <- mean((y_test - y_pred_lm)^2)
+cat("Test Set MSE for Linear Model:", mse_lm, "\n")
+```
+
+```{r}
+#Loading all the required packages
+library(mgcv)
+library(readxl)
+library(visreg)
+
+#Loading the data
+concrete_data <- read_excel("/Users/prabhuavula7/Desktop/Concrete_Data.xls")
+colnames(concrete_data) = c("cem", "bfs", "fa", "water", "sp", "cagg", "fagg", "age", "ccs")
+column_names = c("cem", "bfs", "fa", "water", "sp", "cagg", "ccs")
+concrete_data = concrete_data[column_names]
+summary(concrete_data)
+
+#Fitting a GAM with linear terms
+gam_linear <- gam(ccs ~ cem + bfs + fa + water + sp + cagg, data = concrete_data)
+
+#Fitting a GAM with smoothed terms
+gam_smoothed <- gam(ccs ~ s(cem) + s(bfs) + s(fa) + s(water) + s(sp) + s(cagg), data = concrete_data)
+
+#Comparing the R-squared values
+summary(gam_linear)$r.sq
+summary(gam_smoothed)$r.sq
+```
+```{r}
+#Visualizing the regression using visreg
+visreg(gam_smoothed, "cem", plot = TRUE, rug = FALSE)
+visreg(gam_smoothed, "bfs", plot = TRUE, rug = FALSE)
+visreg(gam_smoothed, "fa", plot = TRUE, rug = FALSE)
+visreg(gam_smoothed, "water", plot = TRUE, rug = FALSE)
+visreg(gam_smoothed, "sp", plot = TRUE, rug = FALSE)
+visreg(gam_smoothed, "cagg", plot = TRUE, rug = FALSE)
+```
+```{r}
+#Plotting the correlation
+library(corrplot)
+corrplot(cor(concrete_data), method = "number")
+```
+

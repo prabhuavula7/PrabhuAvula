@@ -1,0 +1,239 @@
+```{r}
+#Create the plot
+par(xpd = NA)
+plot(NA, NA, type = "n", xlim = c(0,100), ylim = c(0,100), xlab = "X", ylab =
+"Y")
+
+#Add the lines
+lines(x = c(40,40), y = c(0,100))
+lines(x = c(0,40), y = c(75,75))
+lines(x = c(75,75), y = c(0,100))
+lines(x = c(20,20), y = c(0,75))
+lines(x = c(75,100), y = c(25,25))
+
+#Add the labels and colors
+text(x = 40, y = 108, labels = c("t1"), col = "brown")
+text(x = -8, y = 75, labels = c("t2"), col = "brown")
+text(x = 75, y = 108, labels = c("t3"), col = "brown")
+text(x = 20, y = 80, labels = c("t4"), col = "brown")
+text(x = 70, y = 25, labels = c("t5"), col = "brown")
+
+#Add the labels and names
+text(x = (40+75)/2, y = 50, labels = c("R1"))
+text(x = 20, y = (100+75)/2, labels = c("R2"))
+text(x = (75+100)/2, y = (100+25)/2, labels = c("R3"))
+text(x = (75+100)/2, y = 25/2, labels = c("R4"))
+text(x = 30, y = 75/2, labels = c("R5"))
+text(x = 10, y = 75/2, labels = c("R6"))
+```
+```{r}
+#Chapter 8, Question 3
+p <- seq(0, 1, 0.01)
+gini.index <- 2 * p * (1 - p)
+class.error <- 1 - pmax(p, 1 - p)
+cross.entropy <- - (p * log(p) + (1 - p) * log(1 - p))
+matplot(p, cbind(gini.index, class.error, cross.entropy), col = c("yellow", "blue", "brown"))
+```
+```{r}
+#C8Q4b:
+par(xpd = NA)
+plot(NA, NA, type = "n", xlim = c(-2, 2), ylim = c(-3, 3), xlab = "X1", ylab = "X2")
+
+# X2 < 1
+lines(x = c(-2, 2), y = c(1, 1))
+
+# X1 < 1 with X2 < 1
+lines(x = c(1, 1), y = c(-3, 1))
+text(x = (-2 + 1)/2, y = -1, labels = c(-1.8))
+text(x = 1.5, y = -1, labels = c(0.63))
+
+# X2 < 2 with X2 >= 1
+lines(x = c(-2, 2), y = c(2, 2))
+text(x = 0, y = 2.5, labels = c(2.49))
+
+# X1 < 0 with X2<2 and X2>=1
+lines(x = c(0, 0), y = c(1, 2))
+text(x = -1, y = 1.5, labels = c(-1.06))
+text(x = 1, y = 1.5, labels = c(0.21))
+```
+```{r}
+#C9Q1a
+library(tibble)
+library(ggplot2)
+tibble(
+  X1 = seq(-5, 5, .01),
+  X2 = 3 * X1 + 1,
+  X2A = 2 - X1/2
+) %>%
+ggplot() +
+geom_point(aes(X1, X2), size = .1) +
+geom_point(aes(X1, X2A), size = .1)
+
+```
+```{r}
+install.packages("ggforce")
+library(ggforce)
+ggplot() +
+geom_segment(aes(x = -10, y = 0, xend = 10, yend = 0), arrow = arrow()) +
+geom_segment(aes(x = 0, y = -10, xend = 0, yend = 10), arrow = arrow()) +
+geom_circle(aes(x0 = -1, y0 = 2, r = 2))
+```
+```{r}
+plot (NA, NA, type = "n", xlim = c(-4,2) ,ylim = c(0,4) ,asp =1 ,xlab = "x1", ylab = "x2")
+symbols (c(-1),c(2), circles = c(2) ,add = TRUE, inches=TRUE)
+text(c(-1),c(2),"<=4", col = "blue")
+text(c(-3.66),c(2),">4",col="red")
+```
+```{r}
+plot(c(0,-1,2,3),c(0,1,2,8), col=c("red", "green", "red","red"),pch=16,asp=1,xlab="x1", ylab="x2")
+symbols(c(-1),c(2),circles= c(2),add= TRUE, inches=FALSE)
+```
+
+```{r}
+x1= c(3,2,4,1,2,4,4)
+x2= c(4,2,4,4,1,3,1) 
+colors = c("red", "red", "red", "red", "blue", "blue", "blue")
+plot(x1, x2, col = colors, pch=16)
+```
+
+```{r}
+x1=c(3,2,4,1,2,4,4)
+x2=c(4,2,4,4,1,3,1)
+colors = c("red", "red","red", "red", "blue", "blue","blue")
+plot(x1 , x2 , col= colors, pch=16)
+abline(-0.5, 1)
+```
+
+```{r}
+x1= c(3,2,4,1,2,4,4)
+x2= c(4,2,4,4,1,3,1) 
+colors = c("red", "red", "red", "red", "blue", "blue", "blue")
+plot(x1, x2, col = colors, pch=16)
+abline(-0.5, 1)
+abline(-1,1,lty=2)
+abline(0,1,lty=2)
+```
+```{r}
+x1= c(3,2,4,1,2,4,4)
+x2= c(4,2,4,4,1,3,1) 
+colors = c("red", "red", "red", "red", "blue", "blue", "blue")
+plot(x1, x2, col = colors, pch=16)
+abline(0.5, 1)
+```
+```{r}
+x1= c(3,2,4,1,2,4,4)
+x2= c(4,2,4,4,1,3,1) 
+colors = c("red", "red", "red", "red", "blue", "blue", "blue")
+plot(x1, x2, col = colors, pch=16)
+points (c(1.5), c(3.5), col="blue", pch=16)
+```
+
+```{r}
+#Loading the required libraries
+library(rpart)
+library(rpart.plot)
+
+#Setting the random seed for reproducibility
+set.seed(123)
+
+#Generating the data with normal distributions
+class_1 <- data.frame(value = rnorm(100, mean = 5, sd = 2), class = 1)
+class_2 <- data.frame(value = rnorm(100, mean = -5, sd = 2), class = 0)
+
+#Combining the data frames
+data <- rbind(class_1, class_2)
+
+#Inducing a decision tree
+tree <- rpart(class ~ value, data = data, method = "class")
+rpart.plot(tree)
+```
+
+
+```{r}
+#Getting the threshold value for the first split
+threshold <- tree$frame$yval[1]
+
+#Getting the number of nodes in the tree
+num_nodes <- nrow(tree$frame)
+
+#Calculating the entropy and Gini for each node
+entropy <- tree$frame$yval
+gini <- 1 - (tree$frame$yval^2 + (1 - tree$frame$yval)^2)
+
+cat("Threshold for the first split:", threshold, "\n")
+cat("Number of nodes in the tree:", num_nodes, "\n")
+cat("Entropy at each node:", entropy, "\n")
+cat("Gini at each node:", gini, "\n")
+
+#Repeating the same with the given normal distributions
+class_1 <- data.frame(value = rnorm(100, mean = 1, sd = 2), class = 1)
+class_2 <- data.frame(value = rnorm(100, mean = -1, sd = 2), class = 0)
+data <- rbind(class_1, class_2)
+tree <- rpart(class ~ value, data = data, method = "class")
+
+#Getting the number of nodes in the new tree
+num_nodes_new <- nrow(tree$frame)
+cat("Number of nodes in the new tree:", num_nodes_new, "\n")
+
+#Pruning the tree
+pruned_tree <- prune(tree, cp = 0.1)
+```
+
+```{r}
+#Getting the pruned tree's summary and its plot
+summary(pruned_tree)
+rpart.plot(pruned_tree)
+
+```
+```{r}
+install.packages("tm")
+library(tm)
+library(e1071)
+
+# Define the file path to the dataset
+data_dir <- "/Users/prabhuavula7/Desktop/sms+spam+collection/"
+sms_data <- read.table(file.path(data_dir, "SMSSpamCollection"), sep = "\t", header = FALSE)
+colnames(sms_data) <- c("class", "text")
+
+# Step 2: Preprocess the text data
+corpus <- Corpus(VectorSource(sms_data$text))
+corpus <- tm_map(corpus, content_transformer(tolower))    # Convert to lowercase
+corpus <- tm_map(corpus, removePunctuation)               # Remove punctuation
+corpus <- tm_map(corpus, removeNumbers)                   # Remove numbers
+corpus <- tm_map(corpus, removeWords, stopwords("en"))    # Remove English stopwords
+corpus <- tm_map(corpus, stripWhitespace)                 # Strip whitespace
+
+# Step 3: Create a Document Term Matrix
+dtm <- DocumentTermMatrix(corpus)
+
+# Step 4: Split the data into training and test sets
+set.seed(123)  # Set seed for reproducibility
+train_indices <- sample(1:nrow(sms_data), 0.7 * nrow(sms_data))  # 70% for training
+train_data <- sms_data[train_indices, ]
+test_data <- sms_data[-train_indices, ]
+
+# Create Document Term Matrices for training and test data
+train_dtm <- DocumentTermMatrix(Corpus(VectorSource(train_data$text)), control = list(dictionary = dtm$control$dictionary))
+test_dtm <- DocumentTermMatrix(Corpus(VectorSource(test_data$text)), control = list(dictionary = dtm$control$dictionary))
+
+# Step 5: Convert the Document Term Matrix to a Boolean representation
+train_matrix <- ifelse(as.matrix(train_dtm) > 0, 1, 0)
+test_matrix <- ifelse(as.matrix(test_dtm) > 0, 1, 0)
+```
+
+
+```{r}
+# Step 6: Fit a Support Vector Machine (SVM) using the e1071 package
+svm_model <- svm(as.factor(train_data$class) ~ ., data = as.data.frame(train_matrix), kernel = "linear")
+
+# Step 7: Report training and test set accuracy
+train_preds <- predict(svm_model, newdata = as.data.frame(train_matrix))
+test_preds <- predict(svm_model, newdata = as.data.frame(test_matrix))
+
+train_accuracy <- sum(train_preds == train_data$class) / length(train_data$class)
+test_accuracy <- sum(test_preds == test_data$class) / length(test_data$class)
+
+cat("Training Set Accuracy:", train_accuracy, "\n")
+cat("Test Set Accuracy:", test_accuracy, "\n")
+```
+

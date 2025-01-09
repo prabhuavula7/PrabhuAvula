@@ -1,0 +1,360 @@
+```{r}
+install.packages("dplyr")
+library(caret)
+library(dplyr)
+```
+Q1. 
+```{r}
+#Loading the library
+library(caret)
+#Loading the dataset straight from the repository
+abalone_data <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data", header = FALSE)
+#Adding the column names
+colnames(abalone_data) <- c("Sex", "Length", "Diameter", "Height", "Whole_Weight", 
+                           "Shucked_Weight", "Viscera_Weight", "Shell_Weight", "Rings")
+#Removing infant from the Sex column
+abalone_data <- abalone_data[abalone_data$Sex %in% c("M", "F"),]
+abalone_data$Sex <- ifelse(abalone_data$Sex == "F", 0, 1)
+
+```
+
+```{r}
+#Using createDatePartition
+set.seed(1)
+trainIndex <- createDataPartition(abalone_data$Sex, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+trainData <- abalone_data[ trainIndex,]
+testData  <- abalone_data[-trainIndex,]
+```
+
+```{r}
+#Fitting a logistic regression model
+logistic_model <- glm(Sex ~ ., data = trainData, family = binomial)
+
+summary(logistic_model)
+
+```
+
+```{r}
+#Finding the confidence intervals
+conf_intervals(logistic_model)
+```
+
+```{r}
+#Code for the confusion matrix
+
+prediction1= predict(logistic_model, testData,type="response")
+prediction = ifelse(prediction1 > 0.5, 1, 0)
+confusionMatrix(factor(prediction), factor(testData$Sex))
+
+```
+
+```{r}
+#Plotting the ROC Curve
+library(pROC)
+plot(roc(testData$Sex,predic1))
+```
+
+```{r}
+#Plotting the correlation plot for the same
+library(corrplot)
+
+corrplot(cor(trainData[, c("Length", "Diameter", "Height", "Whole_Weight", 
+                           "Shucked_Weight", "Viscera_Weight", "Shell_Weight", "Rings")]), method="circle")
+```
+Q2.
+```{r}
+#Loading the necessary libraries
+library(e1071)
+
+#Loading the dataset from the repository 
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.data"
+mushroom_data <- read.csv(url, header = FALSE, na.strings = "?")
+colnames(mushroom_data) <- c("Class", "Cap_Shape", "Cap_Surface", "Cap_Color", "Bruises", 
+                            "Odor", "Gill_Attachment", "Gill_Spacing", "Gill_Size", 
+                            "Gill_Color", "Stalk_Shape", "Stalk_Root", "Stalk_Surface_Above_Ring", 
+                            "Stalk_Surface_Below_Ring", "Stalk_Color_Above_Ring", 
+                            "Stalk_Color_Below_Ring", "Veil_Type", "Veil_Color", "Ring_Number", 
+                            "Ring_Type", "Spore_Print_Color", "Population", "Habitat")
+
+#Removing rows with missing values
+mushroom_data <- na.omit(mushroom_data)
+
+#Converting class because I faced a downstream issue with it
+mushroom_data$Class <- factor(mushroom_data$Class, levels = c('e', 'p'))
+
+#Creating the Naive Bayes classifier
+set.seed(123)
+splitIndex <- sample(2, nrow(mushroom_data), replace = TRUE, prob = c(0.8, 0.2))
+trainData <- mushroom_data[splitIndex == 1,]
+testData <- mushroom_data[splitIndex == 2,]
+
+#Training the Naive Bayes classifier
+naive_bayes_model <- naiveBayes(Class ~ ., data = trainData)
+
+#Predicting classes on the training and testing data
+trainPredictions <- predict(naive_bayes_model, trainData, type = "class")
+testPredictions <- predict(naive_bayes_model, testData, type = "class")
+
+#Calculating accuracy on training and testing data
+trainAccuracy <- sum(trainPredictions == trainData$Class) / length(trainPredictions)
+testAccuracy <- sum(testPredictions == testData$Class) / length(testPredictions)
+
+#Creating a confusion matrix
+conf_matrix <- table(trainPredictions, trainData$Class)
+
+#Printing the confusion matrix
+print(conf_matrix)
+
+#Showing the results
+cat("Accuracy on training data:", trainAccuracy, "\n")
+cat("Accuracy on testing data:", testAccuracy, "\n")
+```
+```{r}
+false_positives <- conf_matrix[2, 1]
+
+#Printing the number of false positives
+print(paste("False Positives:", false_positives))
+
+```
+
+Q3.
+```{r}
+#get necessary libraries
+library(caret)
+library(ggplot2)
+library(lattice)
+#get the dataset from the downloaded location on my computer
+yacht_data = read.table("/Users/prabhuavula7/Desktop/Assignment 2/yacht_hydrodynamics.data",header = F)
+names(yacht_data) = c("longitude","Prismatic","displacement","beam-draught","beamlenght","fraude","residuary")
+set.seed(1)
+#just to view it
+head(yacht_data)
+```
+```{r}
+#using caret
+yindex = createDataPartition(yacht_data$longitude,p=0.2,list=FALSE)
+ytest = yacht_data[y_index,]
+ytrain = yacht_data[-y_index,]
+```
+
+```{r}
+#doing a linear fit
+linear_model= lm(residuary~.,data=y_train)
+
+testPrediction <- predict(linear_model, newdata = y_test)
+```
+
+
+```{r}
+#training MSE/RMSE
+trainprediction <- predict(linear_model, newdata = y_train)
+
+trainMSE = mean((y_train$residuary - trainprediction)^2)
+trainRMSE = sqrt(trainMSE)
+```
+
+```{r}
+#training R^2
+trainRSS = sum((y_train$residuary - trainprediction)^2)
+trainTSS = sum((y_train$residuary - mean(y_train$residuary))^2)
+trainr2 = 1- (trainRSS/trainTSS)
+```
+
+```{r}
+#Showing those values
+cat(trainMSE, "\n")
+cat(trainRMSE, "\n")
+cat(trainr2, "\n")
+
+```
+
+```{r}
+
+#Test MSE and RMSE and R^2
+testPrediction <- predict(linear_model, newdata = y_test)
+
+testMSE = mean((y_test$residuary - testPrediction)^2)
+testRMSE = sqrt(testMSE)
+testRSS = sum((y_test$residuary - testPrediction)^2)
+testTSS = sum((y_test$residuary - mean(y_test$residuary))^2)
+testr2 = 1- (testRSS/testTSS)
+```
+
+```{r}
+#Showing those values
+cat(testMSE, "\n")
+cat(testRMSE, "\n")
+cat(testRSS, "\n")
+cat(testTSS, "\n")
+cat(testr2, "\n")
+```
+```{r}
+#Using caret to perform bootstrap
+ctrl<-trainControl(method = "boot",number = 1000,p=0.8)
+boot_model<-train(residuary~.,data = y_train,trControl=ctrl,method="lm")
+boot_model$resample
+(boot_model$resample$RMSE)^2
+```
+```{r}
+#Plotting the histogram
+hist(boot_model$resample$RMSE, main="Histogram of boot_model$resample$RMSE", xlab="boot_model$resample$RMSE")
+```
+```{r}
+#Calculating the mean RMSE and mean R2 for bootstrap
+sprintf("Mean RMSE = %s",mean(boot_model$resample$RMSE))
+sprintf("Mean R2 = %s",mean(boot_model$resample$Rsquared))
+```
+
+```{r}
+#Getting bootstrap values to compare with basic model
+test_boot_pred = predict(boot_model,y_test)
+test_boot_MSE= mean((y_test$residuary-test_boot_pred)^2)
+test_boot_RMSE = sqrt(test_boot_MSE)
+test_boot_RSS = sum((y_test$residuary-test_boot_pred)^2)
+test_boot_TSS = sum((y_test$residuary-mean(y_test$residuary))^2)
+test_boot_R2= 1-(test_boot_RSS /test_boot_TSS)
+
+#Showing Values
+cat(test_boot_MSE, "\n")
+cat(test_boot_RMSE, "\n")
+cat(test_boot_R2, "\n")
+```
+
+Q4.
+```{r}
+#Loading the required library
+library(caret)
+
+#Loading the datasets
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data-numeric"
+germandata <- read.table(url, header = FALSE, sep = "")
+
+#Renaming the last column as the class variable
+colnames(germandata)[ncol(germandata)] <- "Class"
+
+#Converting class to binary cause I face downstream issues
+germandata$Class <- ifelse(germandata$Class == 1, 1, 0)
+```
+
+
+```{r}
+# Create 80/20 train-test split
+set.seed(1)
+trainIndex <- createDataPartition(germandata$Class, p = 0.8, list = FALSE)
+trainData <- data[trainIndex, ]
+testData <- data[-trainIndex, ]
+```
+
+
+```{r}
+#Building a logistic regression model
+logistic_model <- glm(Class ~ ., data = trainData, family = binomial)
+```
+
+
+```{r}
+#Calculating the training Precision, Recall, and F1-score
+trainpredictions <- predict(logistic_model, newdata = trainData, type = "response")
+trainpredictionsbinary <- ifelse(train_predictions >= 0.5, 1, 0)
+```
+
+
+```{r}
+#Converting the Class to factor in trainData
+trainData$Class <- factor(trainData$Class, levels = c(0, 1))
+
+#Calculating the confusion matrix for training data
+confusion_matrix_training <- confusionMatrix(data = factor(trainpredictionsbinary, levels = c(0, 1)), 
+                                     reference = trainData$Class)
+
+#Calculating the training precision, recall, and F1-score
+trainprecision <- confusion_matrix_training$byClass["Pos Pred Value"]
+trainrecall <- confusion_matrix_training$byClass["Sensitivity"]
+trainf1score <- confusion_matrix_training$byClass["F1"]
+```
+
+
+```{r}
+cat("Training Precision:", trainprecision, "\n")
+cat("Training Recall:", trainrecall, "\n")
+cat("Training F1-Score:", trainf1score, "\n")
+```
+
+
+```{r}
+#Performing k-10 cross-validation 
+ctrl <- trainControl(method = "cv", number = 10)
+cvmodel <- train(Class ~ ., data = trainData, method = "glm", trControl = ctrl, family = binomial)
+
+#Calculating the cross-validated Precision, Recall, and F1-score
+cvpredictions <- predict(cvmodel, newdata = trainData, type = "raw")
+cvpredictionsbinary <- ifelse(cvpredictions >= 0.5, 1, 0)
+
+#Calculating the confusion matrix for cross-validated training data
+cvpredictionsbinary <- factor(cvpredictionsbinary, levels = c(0, 1))
+confusionmatrixcv <- confusionMatrix(data = cvpredictionsbinary, reference = trainData$Class)
+
+#Calculating the cross-validated precision, recall, and F1-score
+cvprecision <- confusionmatrixcv$byClass["Pos Pred Value"]
+cvrecall <- confusionmatrixcv$byClass["Sensitivity"]
+cvf1score <- confusionmatrixcv$byClass["F1"]
+```
+
+
+```{r}
+#Showing the data
+cat("Cross-Validated Precision:", cvprecision, "\n")
+cat("Cross-Validated Recall:", cvrecall, "\n")
+cat("Cross-Validated F1-Score:", cvf1score, "\n")
+```
+
+
+```{r}
+#Comparing the original and cross-validated model on the test set
+testpredictions <- predict(model, newdata = testData, type = "response")
+testpredictionsbinary <- ifelse(testpredictions >= 0.5, 1, 0)
+
+#Converting the Class to factor in testData
+testData$Class <- factor(testData$Class, levels = c(0, 1))
+
+#Calculating the confusion matrix for test data
+confusionmatrixtest <- confusionMatrix(data = factor(testpredictionsbinary, levels = c(0, 1)), 
+                                    reference = testData$Class)
+
+#Calculating the test set precision, recall, and F1-score
+testprecision <- confusionmatrixtest$byClass["Pos Pred Value"]
+testrecall <- confusionmatrixtest$byClass["Sensitivity"]
+testf1score <- confusionmatrixtest$byClass["F1"]
+```
+
+
+```{r}
+#Showing the results
+cat("Test Set Precision (Original Model):", testprecision, "\n")
+cat("Test Set Recall (Original Model):", testrecall, "\n")
+cat("Test Set F1-Score (Original Model):", testf1score, "\n")
+```
+
+
+```{r}
+#Performing the cross-validated predictions on the test set 
+cvtestpredictions <- predict(cv_model, newdata = testData, type = "raw")
+cvtestpredictionsbinary <- ifelse(cvtestpredictions >= 0.5, 1, 0)
+
+#Calculating the confusion matrix for test data 
+cvtestpredictionsbinary <- factor(cvtestpredictionsbinary, levels = c(0, 1))
+confusionmatrixcvtest <- confusionMatrix(data = cvtestpredictionsbinary, reference = testData$Class)
+
+#Calculating the test set precision, recall, and F1-score 
+cvtestprecision <- confusionmatrixcvtest$byClass["Pos Pred Value"]
+cvtestrecall <- confusionmatrixcvtest$byClass["Sensitivity"]
+cvtestf1score <- confusionmatrixcvtest$byClass["F1"]
+
+#Showing the data
+cat("Test Set Precision (Cross-Validated Model):", cvtestprecision, "\n")
+cat("Test Set Recall (Cross-Validated Model):", cvtestrecall, "\n")
+cat("Test Set F1-Score (Cross-Validated Model):", cvtestf1score, "\n")
+```
+
